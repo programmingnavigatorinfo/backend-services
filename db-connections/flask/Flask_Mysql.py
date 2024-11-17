@@ -5,8 +5,8 @@ app = Flask(__name__)
 
 config = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'mouli',
+    'user': '#####',
+    'password': '#####',
     'database': 'mydb'
 }
 
