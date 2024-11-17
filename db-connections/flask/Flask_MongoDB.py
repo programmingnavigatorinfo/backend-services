@@ -6,8 +6,8 @@ from urllib.parse import quote_plus
 
 app = Flask(__name__)
 
-username = "programmingnavigatorinfo"
-password = "ProgrammingNavigator@1234"
+username = "#############"
+password = "##############"
 
 encoded_username = quote_plus(username)
 encoded_password = quote_plus(password)
