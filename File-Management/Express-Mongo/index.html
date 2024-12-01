@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Upload and Download</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-top: 10px;
+      color: #555;
+    }
+
+    input[type="text"],
+    input[type="file"],
+    button {
+      margin-top: 5px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #ffffff;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #message {
+      margin-top: 10px;
+      text-align: center;
+      color: green;
+    }
+
+    .media-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .media-item-container {
+      background: #f1f1f1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+      width: calc(33.333% - 20px); /* Adjust this percentage for different layout */
+    }
+
+    .media-item {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      text-align: left;
+      background: #ffffff;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+      .media-item-container {
+        width: calc(50% - 20px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .media-item-container {
+        width: calc(100% - 20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Media Files</h1>
+    <div id="message"></div>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <label for="title">Title:</label>
+      <input type="text" id="title" name="title" required><br>
+
+      <label for="image">Image (PNG, JPG, JPEG):</label>
+      <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg"><br>
+
+      <label for="video">Video (MP4, MOV):</label>
+      <input type="file" id="video" name="video" accept=".mp4,.mov"><br>
+
+      <label for="document">Document (PDF, DOC, TXT):</label>
+      <input type="file" id="document" name="document" accept=".pdf,.doc,.txt"><br>
+
+      <button type="submit">Submit</button>
+    </form>
+
+    <h2>Uploaded Media</h2>
+    <div id="mediaContainer" class="media-container"></div>
+  </div>
+
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    const messageDiv = document.getElementById('message');
+    const mediaContainer = document.getElementById('mediaContainer');
+
+    async function uploadFile(file, fileType) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', document.getElementById('title').value);
+
+      try {
+        const response = await fetch('http://localhost:3000/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            console.log(result,'inside success');
+          displayMedia(fileType, result.data);
+          messageDiv.innerHTML = 'Files uploaded successfully!';
+        } else {
+          messageDiv.innerHTML = 'Failed to upload files.';
+        }
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        messageDiv.innerHTML = 'Error uploading files.';
+      }
+    }
+
+    function displayMedia(fileType, data) {
+      let element;
+
+      if (!['image', 'video', 'document'].includes(fileType) || !data) {
+        console.error('Invalid file type or missing data');
+        return;
+      }
+
+      fetch(`http://localhost:3000/download/${data}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`API request failed with status ${response.status}`);
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          console.log('inside then',blob);
+          if (fileType === 'image') {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              element = `<img src="${event.target.result}" alt="${data.title}" class="media-item">`;
+              mediaContainer.innerHTML += `<div class="media-item-container">${element}</div>`;
+            };
+            reader.readAsDataURL(blob);
+          } else if (fileType === 'video') {
+            const url = URL.createObjectURL(blob);
+            element = `<video controls class="media-item"><source src="${url}"></video>`;
+            mediaContainer.innerHTML += `<div class="media-item-container">${element}</div>`;
+          } else if (fileType === 'document') {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              const fileContent = event.target.result;
+              element = `<pre class="media-item">${fileContent}</pre>`;
+              mediaContainer.innerHTML += `<div class="media-item-container">${element}</div>`;
+            };
+            reader.readAsText(blob);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching media:', error);
+        });
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const imageFile = document.getElementById('image').files[0];
+      const videoFile = document.getElementById('video').files[0];
+      const documentFile = document.getElementById('document').files[0];
+
+      if (imageFile) await uploadFile(imageFile, 'image');
+      if (videoFile) await uploadFile(videoFile, 'video');
+      if (documentFile) await uploadFile(documentFile, 'document');
+    });
+  </script>
+</body>
+</html>

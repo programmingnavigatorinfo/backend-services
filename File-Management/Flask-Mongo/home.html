@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Upload</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Media Files</h1>
+        <div id="message"></div>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="image">Image (PNG, JPG, JPEG):</label>
+            <input type="file" id="image" name="image" accept=".png,.jpg,.jpeg"><br>
+
+            <label for="video">Video (MP4, MOV):</label>
+            <input type="file" id="video" name="video" accept=".mp4,.mov"><br>
+
+            <label for="document">Document (PDF, DOC):</label>
+            <input type="file" id="document" name="document" accept=".pdf,.doc"><br>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Uploaded Media</h2>
+        <div id="mediaContainer" class="media-container"></div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const messageDiv = document.getElementById('message');
+        const mediaContainer = document.getElementById('mediaContainer');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+
+            const response = await fetch('http://127.0.0.1:5000/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                messageDiv.innerHTML = `<div class="success">${result.message}</div>`;
+                fetchMedia();  // Refresh the media list
+            } else {
+                messageDiv.innerHTML = `<div class="error">${result.message}</div>`;
+            }
+        });
+
+        async function fetchMedia() {
+            const response = await fetch('http://127.0.0.1:5000/display');
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                mediaContainer.innerHTML = '';
+                result.media.forEach(media => {
+                    let element;
+                    if (media.type === 'image') {
+                        element = `<img src="${media.src}" alt="Image" class="media-item">`;
+                    } else if (media.type === 'video') {
+                        element = `<video controls class="media-item"><source src="${media.src}"></video>`;
+                    } else if (media.type === 'document') {
+                        if (media.name.endsWith('.pdf')) {
+                            element = `<embed src="http://127.0.0.1:5000${media.src}" width="600" height="400" type="application/pdf" class="media-item">`;
+                        }
+                        // For DOC, use Google Docs Viewer
+                        else if (media.name.endsWith('.doc')) {
+                            element = `<iframe src="https://docs.google.com/viewer?url=${media.src}" width="600" height="400" class="media-item"></iframe>`;
+                        } else {
+                        // Provide download link for other document types
+                        element = `<a href="http://127.0.0.1:5000${media.src}" class="media-item" download>${media.name}</a>`;
+                    }
+                }
+                mediaContainer.innerHTML += `<div class="media-item-container">${element}</div>`;
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>
