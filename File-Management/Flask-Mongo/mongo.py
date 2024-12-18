@@ -11,8 +11,8 @@ app = Flask(__name__)
 CORS(app)
 
 # MongoDB connection
-username = "programmingnavigatorinfo"
-password = "ProgrammingNavigator@1234"
+username = "#######################"
+password = "#######################"
 encoded_username = quote_plus(username)
 encoded_password = quote_plus(password)
 
