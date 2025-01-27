@@ -11,8 +11,8 @@ const transporter = nodemailer.createTransport({
     port:465,
     secure:true,
     auth:{
-        user:"pradeepmajji42@gmail.com",
-        pass:"oytitsmtwiioxivw"
+        user:"your email",
+        pass:"your password"
     }
 })
 
@@ -24,7 +24,7 @@ app.post("/send-email",async(req,res)=>{
 
     try{
         const mailOptions={
-            from:"Pradeep Majji <pradeepmajji42@gmail.com>",
+            from:"Your Name <your email>",
             to,
             subject,
             text,
