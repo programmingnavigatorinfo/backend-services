@@ -8,8 +8,8 @@ app=Flask(__name__)
 
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT']=465
-app.config['MAIL_USERNAME']='pradeepmajji42@gmail.com'
-app.config['MAIL_PASSWORD']='rapkekywqeuwybej'
+app.config['MAIL_USERNAME']='your email'
+app.config['MAIL_PASSWORD']='***************'
 app.config['MAIL_USE_SSL']=True
 app.config['MAIL_USE_TLS']=False
 
@@ -23,7 +23,7 @@ def send_mail():
     sub=data["subject"]
     body=data["text"]
 
-    msg=Message(sub,sender='Pradeep Majji <pradeepmajji42@gmail.com>',recipients=[rec])
+    msg=Message(sub,sender='Your Username <your email>',recipients=[rec])
     msg.body=body
 
     try:
